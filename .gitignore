@@ -1,0 +1,13 @@
+# local data + persisted settings
+data/*.json
+config.yaml
+
+# secrets
+.env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/

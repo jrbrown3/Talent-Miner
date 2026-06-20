@@ -1,0 +1,17 @@
+# --- Core (required) ---
+streamlit>=1.34
+pypdf>=4.0
+python-docx>=1.1
+requests>=2.31
+beautifulsoup4>=4.12
+lxml>=5.0
+pyyaml>=6.0
+pandas>=2.0
+reportlab>=4.0         # PDF export of use-case briefs (pure Python, no system deps)
+python-dotenv>=1.0     # auto-loads .env so ANTHROPIC_API_KEY etc. are available
+
+# --- AI providers (install only the ones you use) ---
+anthropic>=0.39          # for the Claude provider
+openai>=1.40             # for the OpenAI and OpenAI-via-Azure providers
+# Ollama needs no Python SDK here - it is called over its local REST API.
+# The "Demo (offline)" provider needs none of the above.
