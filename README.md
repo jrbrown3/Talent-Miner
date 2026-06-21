@@ -31,6 +31,14 @@ JSON files).
 
 Toggle **light/dark mode** from the header on any page.
 
+## Screenshots
+
+![Portfolio business case and impact vs. effort chart](screenshots/roadmap-portfolio.png)
+
+![Recommended roadmap — Now / Near / Far lanes](screenshots/roadmap-lanes.png)
+
+![Use case detail with evidence, scoring, and ROI](screenshots/use-case-detail.png)
+
 ## Quick start
 
 ```bash
