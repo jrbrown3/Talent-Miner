@@ -14,6 +14,23 @@ from urllib.parse import urlparse
 
 from .models import SourceDocument
 
+# Restrict URL ingestion to trusted job-hosting domains to prevent SSRF.
+# Extend this set only with domains your organization explicitly trusts.
+ALLOWED_JOB_URL_HOSTS = {
+    "company.com",
+    "www.company.com",
+    "careers.company.com",
+}
+
+
+def _is_allowed_host(hostname: str) -> bool:
+    host = hostname.lower().rstrip(".")
+    for allowed in ALLOWED_JOB_URL_HOSTS:
+        allowed_host = allowed.lower().rstrip(".")
+        if host == allowed_host or host.endswith(f".{allowed_host}"):
+            return True
+    return False
+
 # Section headers commonly seen in job descriptions. Used for a light-touch
 # heuristic split so the AI gets some structure to work with.
 SECTION_PATTERNS = {
@@ -99,6 +116,8 @@ def _validate_public_http_url(url: str) -> str:
         raise ValueError("URL must include a valid hostname")
     if parsed.username or parsed.password:
         raise ValueError("URLs with embedded credentials are not allowed")
+    if not _is_allowed_host(parsed.hostname):
+        raise ValueError("URL hostname is not in the allowed list")
 
     try:
         infos = socket.getaddrinfo(parsed.hostname, None)
@@ -118,7 +137,7 @@ def _validate_public_http_url(url: str) -> str:
         ):
             raise ValueError("URL resolves to a non-public IP address, which is not allowed")
 
-    return url
+    return parsed.geturl()
 
 
 def extract_url(url: str, timeout: int = 20) -> str:
