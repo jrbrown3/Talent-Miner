@@ -6,8 +6,11 @@ AI layer for analysis.
 """
 from __future__ import annotations
 
+import ipaddress
 import re
+import socket
 from pathlib import Path
+from urllib.parse import urlparse
 
 from .models import SourceDocument
 
@@ -88,12 +91,43 @@ def extract_docx(path: str | Path) -> str:
     return "\n".join(parts)
 
 
+def _validate_public_http_url(url: str) -> str:
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        raise ValueError("URL must start with http:// or https://")
+    if not parsed.hostname:
+        raise ValueError("URL must include a valid hostname")
+    if parsed.username or parsed.password:
+        raise ValueError("URLs with embedded credentials are not allowed")
+
+    try:
+        infos = socket.getaddrinfo(parsed.hostname, None)
+    except socket.gaierror as exc:
+        raise ValueError("Could not resolve URL hostname") from exc
+
+    for info in infos:
+        ip_text = info[4][0]
+        ip = ipaddress.ip_address(ip_text)
+        if (
+            ip.is_private
+            or ip.is_loopback
+            or ip.is_link_local
+            or ip.is_multicast
+            or ip.is_reserved
+            or ip.is_unspecified
+        ):
+            raise ValueError("URL resolves to a non-public IP address, which is not allowed")
+
+    return url
+
+
 def extract_url(url: str, timeout: int = 20) -> str:
     import requests
     from bs4 import BeautifulSoup
 
+    safe_url = _validate_public_http_url(url)
     headers = {"User-Agent": "Mozilla/5.0 (compatible; AIOpportunityFinder/1.0)"}
-    resp = requests.get(url, headers=headers, timeout=timeout)
+    resp = requests.get(safe_url, headers=headers, timeout=timeout)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "lxml")
     for tag in soup(["script", "style", "noscript", "header", "footer", "nav", "svg"]):
