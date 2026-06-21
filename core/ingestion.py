@@ -29,7 +29,7 @@ def clean_text(text: str) -> str:
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     text = re.sub(r"[ \t]+", " ", text)
     # collapse 3+ blank lines down to a single blank line
-    text = re.sub(r"\n\s*\n\s*\n+", "\n\n", text)
+    text = re.sub(r"\n[ \t]*\n[ \t]*\n+", "\n\n", text)
     lines = [ln.strip() for ln in text.split("\n")]
     return "\n".join(lines).strip()
 

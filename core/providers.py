@@ -394,9 +394,14 @@ def extract_json(text: str) -> dict[str, Any]:
     """Robustly pull a JSON object out of a model response."""
     if not text or not text.strip():
         raise ProviderError("Empty response from model.")
-    # strip markdown fences if present
-    fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
-    candidate = fenced.group(1) if fenced else text
+    # strip markdown fences if present - use string ops to avoid DOTALL regex ReDoS
+    candidate = text
+    fence_open = text.find("```")
+    if fence_open != -1:
+        after_fence = text.find("\n", fence_open)  # skip the ```json line
+        fence_close = text.rfind("```")
+        if after_fence != -1 and fence_close > after_fence:
+            candidate = text[after_fence:fence_close].strip()
     try:
         return json.loads(candidate)
     except json.JSONDecodeError:
